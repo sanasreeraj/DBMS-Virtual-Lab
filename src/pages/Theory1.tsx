@@ -71,6 +71,22 @@ import createSQLViewsSubtopic from '../Theory/ViewsAndTriggers/Views';
 import createKnowledgeCheckViewsTriggers from '../Theory/ViewsAndTriggers/KnowledgeCheckViewTrigger';
 import createSQLTriggersSubtopic from '../Theory/ViewsAndTriggers/Triggers';
 import createViewsVsTriggersSubtopic from '../Theory/ViewsAndTriggers/Difference';
+import createIntroToFileOrg from '../Theory/FileOrganisation/IntroToFileOrg';
+import createSQLIndexingSubtopic from '../Theory/FileOrganisation/IndexingSQL';
+import createDenseVSsparseIndexSubtopic from '../Theory/FileOrganisation/DenseVSsparseIndex';
+import createPrimaryAndClusteringIndexingSubtopic from '../Theory/FileOrganisation/PrimaryVSclustering';
+import createSecIndexingSubtopic from '../Theory/FileOrganisation/SecIndexing';
+import createKnowledgeCheckFileOrganizationSubtopic from '../Theory/FileOrganisation/KnowledgeCheckFileOrg';
+import createIntroToBTrees from '../Theory/BTreesAndBPlusTrees/IntroToBTrees';
+import createBTreeSubtopic from '../Theory/BTreesAndBPlusTrees/ConstructBTrees';
+import createBTreeOrderSubtopic from '../Theory/BTreesAndBPlusTrees/OrderOfBTrees';
+import createBPlusTreesSubtopic from '../Theory/BTreesAndBPlusTrees/IntroToBplusTrees'; 
+import createConstOFBplusTrees from '../Theory/BTreesAndBPlusTrees/ConstOFBplusTrees';
+import createBPlusTreeOrderSubtopic from '../Theory/BTreesAndBPlusTrees/OrderOfBplustrees';
+import createBTreeminmaxSubtopic from '../Theory/BTreesAndBPlusTrees/MinMaxKeyandNodes';
+import createBPlusTreeBulkSubtopic from '../Theory/BTreesAndBPlusTrees/BulkLoadingB+trees';
+import createKnowledgeCheckBBPlusTreesSubtopic from '../Theory/BTreesAndBPlusTrees/KnowledgeCheckBtrees';
+import createJoinAlgorithmsSubtopic from '../Theory/BTreesAndBPlusTrees/JoinAlgo';
 
 const topics: Topic[] = [
   createGettingStartedTopic(),
@@ -81,7 +97,10 @@ const topics: Topic[] = [
   createSQLBasicsTopic(),
   createSQLAdvancedTopic(),
   createViewTriggerTopic(),
+  createFileOrganisationTopic(),
+  createBtreesTopic(),
 ];
+
 
 
 
@@ -136,7 +155,6 @@ function createERDiagramTopic(): Topic {
         createERModelKnowledgeCheck(),
       ],
       quiz: createERModelKnowledgeCheck().quiz || [],
-
     };
 }
 
@@ -161,7 +179,6 @@ function createNormalizationTopic(): Topic {
         createKnowledgeCheckNormalizationSubtopic(),
       ],
       quiz: createKnowledgeCheckNormalizationSubtopic().quiz || [],
-
     };
 }
 
@@ -187,8 +204,6 @@ function createRelationalAlgebraTopic(): Topic {
         createKnowledgeCheckRelationalAlgebraSubtopic(),
       ],
       quiz: createKnowledgeCheckRelationalAlgebraSubtopic().quiz || [],
-
-
     };
 }
 
@@ -210,7 +225,6 @@ function createSQLBasicsTopic(): Topic {
         createKnowledgeCheckSQLSubtopic(),
       ],
       quiz: createKnowledgeCheckSQLSubtopic().quiz || [],
-
     };
 }
 
@@ -233,8 +247,6 @@ function createSQLAdvancedTopic(): Topic {
 
       ],
       quiz: createKnowledgeCheckAdvancedSQL().quiz || [],
-
-
     };
 }
 
@@ -248,15 +260,50 @@ function createViewTriggerTopic(): Topic {
         createSQLTriggersSubtopic(),
         createViewsVsTriggersSubtopic(),
         createKnowledgeCheckViewsTriggers(),
-
       ],
       quiz: createKnowledgeCheckViewsTriggers().quiz || [],
+    };
+}
 
-
+function createFileOrganisationTopic(): Topic {
+    return {
+      id: 'file organisation',
+      title: 'File Organisation',
+      content: 'SQL (Structured Query Language) is a standard language used to manage and manipulate relational databases. It allows you to store, retrieve, update, and delete data efficiently.',
+      subtopics: [
+        createIntroToFileOrg(),
+        createSQLIndexingSubtopic(),
+        createDenseVSsparseIndexSubtopic(),
+        createPrimaryAndClusteringIndexingSubtopic(),
+        createSecIndexingSubtopic(),
+        createKnowledgeCheckFileOrganizationSubtopic(),
+      ],
+      quiz: createKnowledgeCheckFileOrganizationSubtopic().quiz || [],
 
     };
 }
 
+function createBtreesTopic(): Topic {
+    return {
+      id: 'btrees',
+      title: 'B and B+ Trees',
+      content: 'SQL (Structured Query Language) is a standard language used to manage and manipulate relational databases. It allows you to store, retrieve, update, and delete data efficiently.',
+      subtopics: [
+        createIntroToBTrees(),
+        createBTreeSubtopic(),
+        createBTreeOrderSubtopic(),
+        createBPlusTreesSubtopic(),
+        createConstOFBplusTrees(),
+        createBPlusTreeOrderSubtopic(),
+        createBTreeminmaxSubtopic(),
+        createBPlusTreeBulkSubtopic(),
+        createJoinAlgorithmsSubtopic(),
+        createKnowledgeCheckBBPlusTreesSubtopic(),
+      ],
+      quiz: createKnowledgeCheckBBPlusTreesSubtopic().quiz || [],
+
+    };
+}
 const Sidebar: React.FC<{
   topics: Topic[];
   selectedTopic: string | null;
@@ -319,7 +366,7 @@ const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: Quiz
             dangerouslySetInnerHTML={{ __html: selectedTopic.content }}
           />
 
-          {(selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers') && (
+          {(selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees') && (
             <button
               onClick={() => setShowQuiz(!showQuiz)}
               className="bg-indigo-600 text-white px-4 py-2 rounded-lg mb-8"
@@ -328,7 +375,7 @@ const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: Quiz
             </button>
           )}
 
-          {showQuiz && (selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers') && (
+          {showQuiz && (selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees') && (
             <Quiz questions={topicQuizzes} />
           )}
         </div>
