@@ -5,7 +5,8 @@ function createKnowledgeCheckSubtopicKeys(): Subtopic {
         id: 'knowledge-check-keys',
         title: 'Knowledge Check',
         content: `<div class="space-y-4">
-            <p class="text-gray-700">Test your understanding of the topic with these 20 multiple-choice questions.</p>
+            <br>
+            <p class="text-gray-800 text-2xl font-bold">Test your understanding of the topic with these 20 multiple-choice questions.</p>
         </div>`,
         quiz: [
             {

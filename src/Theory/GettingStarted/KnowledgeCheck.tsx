@@ -4,8 +4,10 @@ function createKnowledgeCheckSubtopic(): Subtopic {
     return {
         id: 'knowledge-check',
         title: 'Knowledge Check',
-        content: `<div class="space-y-4">
-            <p class="text-gray-700">Test your understanding of the topic with these 20 multiple-choice questions.</p>
+        content: `
+        <div class="space-y-4">
+            <br>
+            <p class="text-gray-800 text-2xl font-bold">Test your understanding of the topic with these 20 multiple-choice questions.</p>
         </div>`,
         quiz: [
             {
