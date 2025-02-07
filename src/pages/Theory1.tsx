@@ -58,6 +58,19 @@ import createKnowledgeCheckSQLSubtopic from '../Theory/SQL-Basics/KnowledgeSQLBa
 import createSQLGroupBySubtopic from '../Theory/SQL-Basics/GroupBy';
 import createSQLHavingSubtopic from '../Theory/SQL-Basics/Having';
 import createSQLOrderBySubtopic from '../Theory/SQL-Basics/OrderBy';
+import createSQLNestedQueriesSubtopic from '../Theory/SQL-Advanced/NestedQueries';
+import createSQLWithClauseSubtopic from '../Theory/SQL-Advanced/WithClause';
+import createSQLAnyAllOperatorsSubtopic from '../Theory/SQL-Advanced/AnyAllOP';
+import createInNotInSubtopic from '../Theory/SQL-Advanced/InNotIn';
+import createSQLExistsNotExistsSubtopic from '../Theory/SQL-Advanced/ExistsOrNot';
+import createSetOperations11Subtopic from '../Theory/SQL-Advanced/setOPER';
+import createKnowledgeCheckAdvancedSQL from '../Theory/SQL-Advanced/KnowledgeCheckSQLAdv';
+import createSQLDivisionOperatorSubtopic from '../Theory/SQL-Advanced/SQLqueryDIVop';
+import createSQLKthMaxMinSubtopic from '../Theory/SQL-Advanced/KthMinMax';
+import createSQLViewsSubtopic from '../Theory/ViewsAndTriggers/Views';
+import createKnowledgeCheckViewsTriggers from '../Theory/ViewsAndTriggers/KnowledgeCheckViewTrigger';
+import createSQLTriggersSubtopic from '../Theory/ViewsAndTriggers/Triggers';
+import createViewsVsTriggersSubtopic from '../Theory/ViewsAndTriggers/Difference';
 
 const topics: Topic[] = [
   createGettingStartedTopic(),
@@ -66,7 +79,10 @@ const topics: Topic[] = [
   createNormalizationTopic(),
   createRelationalAlgebraTopic(),
   createSQLBasicsTopic(),
+  createSQLAdvancedTopic(),
+  createViewTriggerTopic(),
 ];
+
 
 
 function createGettingStartedTopic(): Topic {
@@ -198,6 +214,49 @@ function createSQLBasicsTopic(): Topic {
     };
 }
 
+function createSQLAdvancedTopic(): Topic {
+    return {
+      id: 'sql advanced',
+      title: 'SQL Advanced',
+      content: 'SQL (Structured Query Language) is a standard language used to manage and manipulate relational databases. It allows you to store, retrieve, update, and delete data efficiently.',
+
+      subtopics: [
+        createSQLNestedQueriesSubtopic(),
+        createSQLWithClauseSubtopic(),
+        createSQLAnyAllOperatorsSubtopic(),
+        createInNotInSubtopic(),
+        createSQLExistsNotExistsSubtopic(),
+        createSetOperations11Subtopic(),
+        createSQLDivisionOperatorSubtopic(),
+        createSQLKthMaxMinSubtopic(),
+        createKnowledgeCheckAdvancedSQL(),
+
+      ],
+      quiz: createKnowledgeCheckAdvancedSQL().quiz || [],
+
+
+    };
+}
+
+function createViewTriggerTopic(): Topic {
+    return {
+      id: 'view trigger',
+      title: 'Views and Triggers',
+      content: 'SQL (Structured Query Language) is a standard language used to manage and manipulate relational databases. It allows you to store, retrieve, update, and delete data efficiently.',
+      subtopics: [
+        createSQLViewsSubtopic(),
+        createSQLTriggersSubtopic(),
+        createViewsVsTriggersSubtopic(),
+        createKnowledgeCheckViewsTriggers(),
+
+      ],
+      quiz: createKnowledgeCheckViewsTriggers().quiz || [],
+
+
+
+    };
+}
+
 const Sidebar: React.FC<{
   topics: Topic[];
   selectedTopic: string | null;
@@ -260,7 +319,7 @@ const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: Quiz
             dangerouslySetInnerHTML={{ __html: selectedTopic.content }}
           />
 
-          {(selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics') && (
+          {(selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers') && (
             <button
               onClick={() => setShowQuiz(!showQuiz)}
               className="bg-indigo-600 text-white px-4 py-2 rounded-lg mb-8"
@@ -269,7 +328,7 @@ const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: Quiz
             </button>
           )}
 
-          {showQuiz && (selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics') && (
+          {showQuiz && (selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers') && (
             <Quiz questions={topicQuizzes} />
           )}
         </div>
