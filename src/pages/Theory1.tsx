@@ -46,6 +46,7 @@ import createSetOperationsSubtopic from '../Theory/RelationalAlgebra/QueriesOnSe
 import createDivisionOperatorSubtopic from '../Theory/RelationalAlgebra/DivisionOp';
 import createJoinTuplesMinMaxSubtopic from '../Theory/RelationalAlgebra/MinMax';
 import createTupleRelationalCalculusSubtopic from '../Theory/RelationalAlgebra/TRC';
+import createRelationalAlgebraSummarySubtopic from '../Theory/RelationalAlgebra/Summary';
 import createKnowledgeCheckRelationalAlgebraSubtopic from '../Theory/RelationalAlgebra/KnowledgeMCQ';
 
 const topics: Topic[] = [
@@ -155,6 +156,7 @@ function createRelationalAlgebraTopic(): Topic {
         createDivisionOperatorSubtopic(),
         createJoinTuplesMinMaxSubtopic(),
         createTupleRelationalCalculusSubtopic(),
+        createRelationalAlgebraSummarySubtopic(),
         createKnowledgeCheckRelationalAlgebraSubtopic(),
       ],
       quiz: createKnowledgeCheckRelationalAlgebraSubtopic().quiz || [],

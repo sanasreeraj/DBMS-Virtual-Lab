@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import SQLEditor from '../components/SQLEditor';
 import { Exercise } from '../types';
 import { BookOpen, ChevronRight } from 'lucide-react';
