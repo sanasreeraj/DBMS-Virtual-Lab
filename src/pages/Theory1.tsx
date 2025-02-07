@@ -48,6 +48,16 @@ import createJoinTuplesMinMaxSubtopic from '../Theory/RelationalAlgebra/MinMax';
 import createTupleRelationalCalculusSubtopic from '../Theory/RelationalAlgebra/TRC';
 import createRelationalAlgebraSummarySubtopic from '../Theory/RelationalAlgebra/Summary';
 import createKnowledgeCheckRelationalAlgebraSubtopic from '../Theory/RelationalAlgebra/KnowledgeMCQ';
+import createSQLIntroductionSubtopic from '../Theory/SQL-Basics/IntroToSQL';
+import createSQLAliasesSubtopic from '../Theory/SQL-Basics/SQLAliases';
+import createSQLAlterUpdateSubtopic from '../Theory/SQL-Basics/AlterVSupdate';
+import createSQLDeleteCommandsSubtopic from '../Theory/SQL-Basics/DeleteVSdropVStruncate';
+import createSQLConstraintsSubtopic from '../Theory/SQL-Basics/ConstraintsSQL'; 
+import createSQLAggregateFunctionsSubtopic from '../Theory/SQL-Basics/AggregateFuncs';
+import createKnowledgeCheckSQLSubtopic from '../Theory/SQL-Basics/KnowledgeSQLBasic';
+import createSQLGroupBySubtopic from '../Theory/SQL-Basics/GroupBy';
+import createSQLHavingSubtopic from '../Theory/SQL-Basics/Having';
+import createSQLOrderBySubtopic from '../Theory/SQL-Basics/OrderBy';
 
 const topics: Topic[] = [
   createGettingStartedTopic(),
@@ -55,6 +65,7 @@ const topics: Topic[] = [
   createERDiagramTopic(),
   createNormalizationTopic(),
   createRelationalAlgebraTopic(),
+  createSQLBasicsTopic(),
 ];
 
 
@@ -165,6 +176,27 @@ function createRelationalAlgebraTopic(): Topic {
     };
 }
 
+function createSQLBasicsTopic(): Topic {
+    return {
+      id: 'sql basics',
+      title: 'SQL Basics',
+      content: 'SQL (Structured Query Language) is a standard language used to manage and manipulate relational databases. It allows you to store, retrieve, update, and delete data efficiently.',
+      subtopics: [
+        createSQLIntroductionSubtopic(),
+        createSQLAliasesSubtopic(),
+        createSQLAlterUpdateSubtopic(),
+        createSQLDeleteCommandsSubtopic(),
+        createSQLConstraintsSubtopic(),
+        createSQLAggregateFunctionsSubtopic(),
+        createSQLGroupBySubtopic(),
+        createSQLHavingSubtopic(),
+        createSQLOrderBySubtopic(),
+        createKnowledgeCheckSQLSubtopic(),
+      ],
+      quiz: createKnowledgeCheckSQLSubtopic().quiz || [],
+
+    };
+}
 
 const Sidebar: React.FC<{
   topics: Topic[];
@@ -228,7 +260,7 @@ const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: Quiz
             dangerouslySetInnerHTML={{ __html: selectedTopic.content }}
           />
 
-          {(selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra') && (
+          {(selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics') && (
             <button
               onClick={() => setShowQuiz(!showQuiz)}
               className="bg-indigo-600 text-white px-4 py-2 rounded-lg mb-8"
@@ -237,7 +269,7 @@ const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: Quiz
             </button>
           )}
 
-          {showQuiz && (selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra') && (
+          {showQuiz && (selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics') && (
             <Quiz questions={topicQuizzes} />
           )}
         </div>
