@@ -96,7 +96,13 @@ import createConflictEquivalentSchedulesSubtopic from '../Theory/TransactionalCo
 import createConflictSerializableSubtopic from '../Theory/TransactionalControl/ConflictSerializableSchedule';
 import createViewSerializableScheduleSubtopic from '../Theory/TransactionalControl/ViewSerializableSch';
 import createSummaryTableSubtopic from '../Theory/TransactionalControl/SummaryTransacCtrl';
-
+import createRecoverableSchedulesSubtopic from '../Theory/ConcurrencyControl/RecoverableSch';
+import createCascadingSchedulesSubtopic from '../Theory/ConcurrencyControl/CascadingSch';
+import createLockBasedProtocolSubtopic from '../Theory/ConcurrencyControl/SimpleLock';
+import createTwoPhaseLockingSubtopic from '../Theory/ConcurrencyControl/TwoPL';
+import create2PLCategoriesSubtopic from '../Theory/ConcurrencyControl/TwoPLCat';
+import createTimestampOrderingProtocolSubtopic from '../Theory/ConcurrencyControl/TimestampProtocol';
+import createKnowledgeCheckConcurrencySubtopicKeys from '../Theory/ConcurrencyControl/KnowledgeConcur';
 
 const topics: Topic[] = [
   createGettingStartedTopic(),
@@ -110,9 +116,8 @@ const topics: Topic[] = [
   createFileOrganisationTopic(),
   createBtreesTopic(),
   createTransactionalControlTopic(),
+  createConcurrencyControlTopic(),
 ];
-
-console.log('Topics:', topics);  // Add this after topics declaration
 
 function createGettingStartedTopic(): Topic {
   return {
@@ -336,6 +341,27 @@ function createTransactionalControlTopic(): Topic {
 
     };
 }
+
+
+function createConcurrencyControlTopic(): Topic {
+  return {
+    id: 'concurrency control',
+    title: 'Concurrency Control',
+    content: 'SQL (Structured Query Language) is a standard language used to manage and manipulate relational databases. It allows you to store, retrieve, update, and delete data efficiently.',
+    subtopics: [
+      createRecoverableSchedulesSubtopic(),
+      createCascadingSchedulesSubtopic(),
+      createLockBasedProtocolSubtopic(),
+      createTwoPhaseLockingSubtopic(),
+      create2PLCategoriesSubtopic(),
+      createTimestampOrderingProtocolSubtopic(),
+      createKnowledgeCheckConcurrencySubtopicKeys(),
+    ],
+    quiz: createKnowledgeCheckConcurrencySubtopicKeys().quiz || [],
+
+  };
+}
+
 const Sidebar: React.FC<{
   topics: Topic[];
   selectedTopic: string | null;
@@ -398,7 +424,7 @@ const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: Quiz
             dangerouslySetInnerHTML={{ __html: selectedTopic.content }}
           />
 
-          {(selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees' || selectedTopic.id === 'knowledge-check-transactional-control') && (
+          {(selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees' || selectedTopic.id === 'knowledge-check-transactional-control' || selectedTopic.id === 'knowledge-check-concurrency') && (
             <button
               onClick={() => setShowQuiz(!showQuiz)}
               className="bg-indigo-600 text-white px-4 py-2 rounded-lg mb-8"
@@ -407,7 +433,7 @@ const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: Quiz
             </button>
           )}
 
-          {showQuiz && (selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees' || selectedTopic.id === 'knowledge-check-transactional-control') && (
+          {showQuiz && (selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees' || selectedTopic.id === 'knowledge-check-transactional-control' || selectedTopic.id === 'knowledge-check-concurrency') && (
             <Quiz questions={topicQuizzes} />
           )}
         </div>

@@ -7,7 +7,7 @@ function createCandidateAndSuperKeySubtopic(): Subtopic {
     content: `
       <div class="space-y-6 max-w-4xl mx-auto p-6">
         <!-- Header Section -->
-        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white shadow-lg">
           <div class="flex items-center space-x-3">
             <h2 class="text-2xl font-bold">Candidate Key vs Super Key</h2>
           </div>
