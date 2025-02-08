@@ -103,6 +103,7 @@ import createTwoPhaseLockingSubtopic from '../Theory/ConcurrencyControl/TwoPL';
 import create2PLCategoriesSubtopic from '../Theory/ConcurrencyControl/TwoPLCat';
 import createTimestampOrderingProtocolSubtopic from '../Theory/ConcurrencyControl/TimestampProtocol';
 import createKnowledgeCheckConcurrencySubtopicKeys from '../Theory/ConcurrencyControl/KnowledgeConcur';
+import createKnowledgeCheckmodeloneSubtopicDBMS from '../Theory/ModelQues/Model';
 
 const topics: Topic[] = [
   createGettingStartedTopic(),
@@ -117,6 +118,7 @@ const topics: Topic[] = [
   createBtreesTopic(),
   createTransactionalControlTopic(),
   createConcurrencyControlTopic(),
+  createmodelTopic(),
 ];
 
 function createGettingStartedTopic(): Topic {
@@ -362,6 +364,19 @@ function createConcurrencyControlTopic(): Topic {
   };
 }
 
+function createmodelTopic(): Topic {
+  return {
+    id: 'model',
+    title: 'Practice Test',
+    content: 'SQL (Structured Query Language) is a standard language used to manage and manipulate relational databases. It allows you to store, retrieve, update, and delete data efficiently.',
+    subtopics: [
+      createKnowledgeCheckmodeloneSubtopicDBMS(),
+    ],
+    quiz: createKnowledgeCheckmodeloneSubtopicDBMS().quiz || [],
+  };
+}
+
+
 const Sidebar: React.FC<{
   topics: Topic[];
   selectedTopic: string | null;
@@ -373,40 +388,69 @@ const Sidebar: React.FC<{
     <div className="fixed w-64 h-full bg-white shadow-lg p-4 flex flex-col">
       <div className="mb-4">
         <br></br>
+        <br></br>
+        <br></br>
         <h2 className="text-xl font-bold text-gray-800">Contents</h2>
       </div>
-      <div className="overflow-y-auto flex-1">
-        {topics.map((topic) => (
-          <div key={topic.id}>
-            <div
-              className="flex items-center justify-between p-2 hover:bg-gray-100 cursor-pointer"
-              onClick={() => toggleTopic(topic.id)}
-            >
-              <div className="flex items-center">
-                <BookOpen className="w-5 h-5 mr-2 text-indigo-600" />
-                <span>{topic.title}</span>
-              </div>
-              {expandedTopics.includes(topic.id) ? <ChevronUp /> : <ChevronDown />}
-            </div>
-            {expandedTopics.includes(topic.id) &&
-              topic.subtopics?.map((subtopic) => (
-                <div
-                  key={subtopic.id}
-                  className={`ml-6 p-2 hover:bg-gray-100 cursor-pointer flex items-center ${
-                    selectedTopic === subtopic.id ? 'bg-indigo-50' : ''
-                  }`}
-                  onClick={() => setSelectedTopic(subtopic.id)}
-                >
-                  <ChevronRight className="w-4 h-4 mr-2" />
-                  <span>{subtopic.title}</span>
+      <div
+        className="overflow-y-auto flex-1"
+        style={{
+          scrollbarWidth: 'thin', // For Firefox
+          scrollbarColor: '#cbd5e0 transparent', // For Firefox
+        }}
+      >
+        {/* Inline styles for WebKit browsers (Chrome, Safari, Edge) */}
+        <style>
+          {`
+            .scrollbar-custom::-webkit-scrollbar {
+              width: 6px; /* Width of the scrollbar */
+            }
+            .scrollbar-custom::-webkit-scrollbar-track {
+              background: transparent; /* Transparent track */
+            }
+            .scrollbar-custom::-webkit-scrollbar-thumb {
+              background-color: #cbd5e0; /* Color of the scrollbar thumb */
+              border-radius: 3px; /* Rounded corners for the thumb */
+            }
+            .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+              background-color: #a0aec0; /* Color of the scrollbar thumb on hover */
+            }
+          `}
+        </style>
+        <div className="scrollbar-custom">
+          {topics.map((topic) => (
+            <div key={topic.id}>
+              <div
+                className="flex items-center justify-between p-2 hover:bg-gray-100 cursor-pointer"
+                onClick={() => toggleTopic(topic.id)}
+              >
+                <div className="flex items-center">
+                  <BookOpen className="w-5 h-5 mr-2 text-indigo-600" />
+                  <span>{topic.title}</span>
                 </div>
-              ))}
-          </div>
-        ))}
+                {expandedTopics.includes(topic.id) ? <ChevronUp /> : <ChevronDown />}
+              </div>
+              {expandedTopics.includes(topic.id) &&
+                topic.subtopics?.map((subtopic) => (
+                  <div
+                    key={subtopic.id}
+                    className={`ml-6 p-2 hover:bg-gray-100 cursor-pointer flex items-center ${
+                      selectedTopic === subtopic.id ? 'bg-indigo-50' : ''
+                    }`}
+                    onClick={() => setSelectedTopic(subtopic.id)}
+                  >
+                    <ChevronRight className="w-4 h-4 mr-2" />
+                    <span>{subtopic.title}</span>
+                  </div>
+                ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 };
+
 
 const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: QuizItem[] }> = ({
   selectedTopic,
@@ -424,7 +468,7 @@ const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: Quiz
             dangerouslySetInnerHTML={{ __html: selectedTopic.content }}
           />
 
-          {(selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees' || selectedTopic.id === 'knowledge-check-transactional-control' || selectedTopic.id === 'knowledge-check-concurrency') && (
+          {(selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees' || selectedTopic.id === 'knowledge-check-transactional-control' || selectedTopic.id === 'knowledge-check-concurrency' || selectedTopic.id === 'knowledge-check12-dbms') && (
             <button
               onClick={() => setShowQuiz(!showQuiz)}
               className="bg-indigo-600 text-white px-4 py-2 rounded-lg mb-8"
@@ -433,7 +477,7 @@ const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: Quiz
             </button>
           )}
 
-          {showQuiz && (selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees' || selectedTopic.id === 'knowledge-check-transactional-control' || selectedTopic.id === 'knowledge-check-concurrency') && (
+          {showQuiz && (selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees' || selectedTopic.id === 'knowledge-check-transactional-control' || selectedTopic.id === 'knowledge-check-concurrency' || selectedTopic.id === 'knowledge-check12-dbms') && (
             <Quiz questions={topicQuizzes} />
           )}
         </div>
