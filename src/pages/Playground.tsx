@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import SQLEditor from '../components/SQLEditor';
 import { DatabaseObject, Query } from '../types';
 import { Table, Eye, Zap, Plus, Trash, Database, RefreshCw } from 'lucide-react';
 
 export default function Playground() {
+  <br></br>
   const [queries, setQueries] = useState<Query[]>([]);
+  <br></br>
   const [activeTab, setActiveTab] = useState<'tables' | 'views' | 'triggers'>('tables');
   const [dbObjects, setDbObjects] = useState<DatabaseObject[]>([
     {
