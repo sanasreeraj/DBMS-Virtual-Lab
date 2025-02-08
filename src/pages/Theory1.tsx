@@ -87,6 +87,16 @@ import createBTreeminmaxSubtopic from '../Theory/BTreesAndBPlusTrees/MinMaxKeyan
 import createBPlusTreeBulkSubtopic from '../Theory/BTreesAndBPlusTrees/BulkLoadingB+trees';
 import createKnowledgeCheckBBPlusTreesSubtopic from '../Theory/BTreesAndBPlusTrees/KnowledgeCheckBtrees';
 import createJoinAlgorithmsSubtopic from '../Theory/BTreesAndBPlusTrees/JoinAlgo';
+import createTransactionsSubtopic from '../Theory/TransactionalControl/transactions';
+import createACIDSubtopic from '../Theory/TransactionalControl/ACIDProps';
+import createSchedulesSubtopic from '../Theory/TransactionalControl/Schedules';
+import createConflictsSubtopic from '../Theory/TransactionalControl/Conflicts';
+import createKnowledgeCheckTransactionalControl from '../Theory/TransactionalControl/KnowledgeCheckTransactionalCheck';
+import createConflictEquivalentSchedulesSubtopic from '../Theory/TransactionalControl/ConflictEquiSch';
+import createConflictSerializableSubtopic from '../Theory/TransactionalControl/ConflictSerializableSchedule';
+import createViewSerializableScheduleSubtopic from '../Theory/TransactionalControl/ViewSerializableSch';
+import createSummaryTableSubtopic from '../Theory/TransactionalControl/SummaryTransacCtrl';
+
 
 const topics: Topic[] = [
   createGettingStartedTopic(),
@@ -99,10 +109,10 @@ const topics: Topic[] = [
   createViewTriggerTopic(),
   createFileOrganisationTopic(),
   createBtreesTopic(),
+  createTransactionalControlTopic(),
 ];
 
-
-
+console.log('Topics:', topics);  // Add this after topics declaration
 
 function createGettingStartedTopic(): Topic {
   return {
@@ -304,6 +314,28 @@ function createBtreesTopic(): Topic {
 
     };
 }
+
+function createTransactionalControlTopic(): Topic {
+    return {
+      id: 'transactional control',
+      title: 'Transactional Control',
+      content: 'SQL (Structured Query Language) is a standard language used to manage and manipulate relational databases. It allows you to store, retrieve, update, and delete data efficiently.',
+      subtopics: [
+        createTransactionsSubtopic(),
+        createACIDSubtopic(),
+        createSchedulesSubtopic(),
+        createConflictsSubtopic(),
+        createConflictEquivalentSchedulesSubtopic(),
+        createConflictSerializableSubtopic(),
+        createViewSerializableScheduleSubtopic(),
+        createSummaryTableSubtopic(),
+        createKnowledgeCheckTransactionalControl()
+
+      ],
+      quiz: createKnowledgeCheckTransactionalControl().quiz || [],
+
+    };
+}
 const Sidebar: React.FC<{
   topics: Topic[];
   selectedTopic: string | null;
@@ -366,7 +398,7 @@ const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: Quiz
             dangerouslySetInnerHTML={{ __html: selectedTopic.content }}
           />
 
-          {(selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees') && (
+          {(selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees' || selectedTopic.id === 'knowledge-check-transactional-control') && (
             <button
               onClick={() => setShowQuiz(!showQuiz)}
               className="bg-indigo-600 text-white px-4 py-2 rounded-lg mb-8"
@@ -375,7 +407,7 @@ const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: Quiz
             </button>
           )}
 
-          {showQuiz && (selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees') && (
+          {showQuiz && (selectedTopic.id === 'knowledge-check' || selectedTopic.id === 'knowledge-check-keys' || selectedTopic.id === 'er-model-knowledge-check' || selectedTopic.id === 'knowledge-check-normalization' || selectedTopic.id === 'knowledge-check-relational-algebra' || selectedTopic.id === 'knowledge-check-sql-basics' || selectedTopic.id === 'knowledge-check-advanced-sql' || selectedTopic.id === 'knowledge-check-views-triggers' || selectedTopic.id === 'knowledge-check-file-organization' || selectedTopic.id === 'knowledge-check-bbplus-trees' || selectedTopic.id === 'knowledge-check-transactional-control') && (
             <Quiz questions={topicQuizzes} />
           )}
         </div>
@@ -497,17 +529,22 @@ export default function Theory() {
   const [expandedTopics, setExpandedTopics] = useState<string[]>([]);
   const [selectedSubtopic, setSelectedSubtopic] = useState<string | null>(null);
 
-  const toggleTopic = (topicId: string) => {
-    setExpandedTopics((prev) =>
-      prev.includes(topicId) ? prev.filter((id) => id !== topicId) : [...prev, topicId]
-    );
-  };
+  console.log('Expanded Topics:', expandedTopics);
+  console.log('Selected Subtopic:', selectedSubtopic);
 
   const currentSubtopic = topics
     .flatMap((topic) => topic.subtopics)
     .find((subtopic) => subtopic?.id === selectedSubtopic);
 
+  console.log('Current Subtopic:', currentSubtopic);
+
   const currentQuiz = currentSubtopic?.quiz || [];
+
+  const toggleTopic = (topicId: string) => {
+    setExpandedTopics((prev) =>
+      prev.includes(topicId) ? prev.filter((id) => id !== topicId) : [...prev, topicId]
+    );
+  };
 
   return (
     <div className="min-h-screen">
