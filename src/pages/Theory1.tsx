@@ -460,9 +460,13 @@ const ContentArea: React.FC<{ selectedTopic: Subtopic | null; topicQuizzes: Quiz
 
   return (
     <div className="ml-64 p-8">
+      <br></br>
+      <br></br>
+      <br></br>
       {selectedTopic ? (
         <div className="max-w-full">
           <h2 className="text-2xl font-bold mb-4">{selectedTopic.title}</h2>
+
           <div
             className="text-gray-700 mb-8"
             dangerouslySetInnerHTML={{ __html: selectedTopic.content }}
