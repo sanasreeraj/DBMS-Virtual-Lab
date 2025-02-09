@@ -1,102 +1,219 @@
-import  { useState } from 'react';
+import { useState } from 'react';
+import { Database, Plus, X } from 'lucide-react';
 import SQLEditor from '../components/SQLEditor';
-import { DatabaseObject, Query } from '../types';
-import { Table, Eye, Zap, Plus, Trash, Database, RefreshCw } from 'lucide-react';
+
+interface Column {
+  name: string;
+  type: string;
+  nullable: boolean;
+  isPrimary: boolean;
+}
+
+interface Table {
+  id: string;
+  name: string;
+  definition: string;
+  columns: Column[];
+  data: any[];
+}
+
+interface QueryResult {
+  success: boolean;
+  data?: any[];
+  error?: string;
+  fields?: string[];
+}
 
 export default function Playground() {
-  <br></br>
-  const [queries, setQueries] = useState<Query[]>([]);
-  <br></br>
-  const [activeTab, setActiveTab] = useState<'tables' | 'views' | 'triggers'>('tables');
-  const [dbObjects, setDbObjects] = useState<DatabaseObject[]>([
-    {
-      id: '1',
-      name: 'employees',
-      type: 'table',
-      definition: `CREATE TABLE employees (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  department VARCHAR(50),
-  salary DECIMAL(10,2)
-)`,
-      createdAt: new Date().toISOString(),
-      columns: [
-        { name: 'id', type: 'SERIAL', nullable: false, isPrimary: true },
-        { name: 'name', type: 'VARCHAR(100)', nullable: false, isPrimary: false },
-        { name: 'email', type: 'VARCHAR(255)', nullable: false, isPrimary: false },
-        { name: 'department', type: 'VARCHAR(50)', nullable: true, isPrimary: false },
-        { name: 'salary', type: 'DECIMAL(10,2)', nullable: true, isPrimary: false }
-      ],
-      data: [
-        { id: 1, name: 'John Doe', email: 'john@example.com', department: 'IT', salary: 75000 },
-        { id: 2, name: 'Jane Smith', email: 'jane@example.com', department: 'HR', salary: 65000 }
-      ]
-    }
-  ]);
-
+  const [tables, setTables] = useState<Table[]>([]);
+  const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newObjectDefinition, setNewObjectDefinition] = useState('');
-  const [selectedObject, setSelectedObject] = useState<DatabaseObject | null>(null);
+  const [newTableDefinition, setNewTableDefinition] = useState('');
+  const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
+  const [queryHistory, setQueryHistory] = useState<string[]>([]);
 
-  const executeQuery = (sql: string) => {
-    // In a real app, this would connect to a database
-    const newQuery: Query = {
-      id: Date.now().toString(),
-      sql,
-      result: selectedObject?.data || [{ message: 'Query executed successfully' }]
-    };
-    setQueries([...queries, newQuery]);
+  const parseCreateTableSQL = (sql: string): Table | null => {
+    try {
+      const tableNameMatch = sql.match(/CREATE\s+TABLE\s+(\w+)\s*\(/i);
+      if (!tableNameMatch) throw new Error("Invalid CREATE TABLE syntax");
+      
+      const tableName = tableNameMatch[1];
+      const columnsSection = sql.slice(sql.indexOf('(') + 1, sql.lastIndexOf(')'));
+      
+      const columnDefinitions = columnsSection.split(',').map(col => col.trim());
+      const columns: Column[] = columnDefinitions.map(colDef => {
+        const parts = colDef.split(/\s+/);
+        return {
+          name: parts[0],
+          type: parts[1],
+          nullable: !colDef.toLowerCase().includes('not null'),
+          isPrimary: colDef.toLowerCase().includes('primary key')
+        };
+      });
+
+      return {
+        id: Date.now().toString(),
+        name: tableName,
+        definition: sql,
+        columns,
+        data: []
+      };
+    } catch (error) {
+      return null;
+    }
   };
 
-  const handleCreateObject = () => {
-    const newObject: DatabaseObject = {
-      id: Date.now().toString(),
-      name: `new_${activeTab.slice(0, -1)}_${dbObjects.length + 1}`,
-      type: activeTab.slice(0, -1) as 'table' | 'view' | 'trigger',
-      definition: newObjectDefinition,
-      createdAt: new Date().toISOString()
+  const handleCreateTable = () => {
+    const newTable = parseCreateTableSQL(newTableDefinition);
+    if (newTable) {
+      setTables([...tables, newTable]);
+      setShowCreateModal(false);
+      setNewTableDefinition('');
+    } else {
+      alert('Invalid table definition. Please check your SQL syntax.');
+    }
+  };
+
+  const executeQuery = (sql: string) => {
+    try {
+      const lowerSQL = sql.toLowerCase();
+      setQueryHistory([...queryHistory, sql]);
+
+      // Handle different types of SQL queries
+      if (lowerSQL.startsWith('select')) {
+        handleSelect(sql);
+      } else if (lowerSQL.startsWith('insert')) {
+        handleInsert(sql);
+      } else if (lowerSQL.startsWith('update')) {
+        handleUpdate(sql);
+      } else if (lowerSQL.startsWith('delete')) {
+        handleDelete(sql);
+      } else {
+        setQueryResult({ 
+          success: false, 
+          error: 'Unsupported query type. Please use SELECT, INSERT, UPDATE, or DELETE.'
+        });
+      }
+    } catch (error) {
+      setQueryResult({ 
+        success: false, 
+        error: 'Error executing query: ' + (error as Error).message 
+      });
+    }
+  };
+
+  const handleSelect = (sql: string) => {
+    const tableName = sql.match(/from\s+(\w+)/i)?.[1];
+    const table = tables.find(t => t.name.toLowerCase() === tableName?.toLowerCase());
+    
+    if (!table) {
+      setQueryResult({ success: false, error: 'Table not found' });
+      return;
+    }
+
+    setQueryResult({ 
+      success: true, 
+      data: table.data,
+      fields: table.columns.map(col => col.name)
+    });
+  };
+
+  const handleInsert = (sql: string) => {
+    // Basic INSERT parsing - this is a simplified version
+    const matches = sql.match(/INSERT\s+INTO\s+(\w+)\s*\((.*?)\)\s*VALUES\s*\((.*?)\)/i);
+    if (!matches) {
+      setQueryResult({ success: false, error: 'Invalid INSERT syntax' });
+      return;
+    }
+
+    const [_, tableName, columns, values] = matches;
+    const table = tables.find(t => t.name.toLowerCase() === tableName.toLowerCase());
+    
+    if (!table) {
+      setQueryResult({ success: false, error: 'Table not found' });
+      return;
+    }
+
+    const columnNames = columns.split(',').map(c => c.trim());
+    const valueList = values.split(',').map(v => v.trim().replace(/'/g, ''));
+    
+    const newRow: any = {};
+    columnNames.forEach((col, idx) => {
+      newRow[col] = valueList[idx];
+    });
+
+    const updatedTable = {
+      ...table,
+      data: [...table.data, newRow]
     };
-    setDbObjects([...dbObjects, newObject]);
-    setShowCreateModal(false);
-    setNewObjectDefinition('');
+
+    setTables(tables.map(t => t.id === table.id ? updatedTable : t));
+    setQueryResult({ 
+      success: true, 
+      data: [newRow],
+      fields: columnNames
+    });
+  };
+
+  const handleUpdate = (sql: string) => {
+    // Simplified UPDATE handling
+    const tableNameMatch = sql.match(/UPDATE\s+(\w+)\s+SET/i);
+    if (!tableNameMatch) {
+      setQueryResult({ success: false, error: 'Invalid UPDATE syntax' });
+      return;
+    }
+
+    const tableName = tableNameMatch[1];
+    const table = tables.find(t => t.name.toLowerCase() === tableName.toLowerCase());
+    
+    if (!table) {
+      setQueryResult({ success: false, error: 'Table not found' });
+      return;
+    }
+
+    // In a real implementation, you would parse the SET and WHERE clauses
+    // For this demo, we'll just acknowledge the update
+    setQueryResult({ 
+      success: true, 
+      data: [],
+      fields: table.columns.map(col => col.name)
+    });
+  };
+
+  const handleDelete = (sql: string) => {
+    // Simplified DELETE handling
+    const tableNameMatch = sql.match(/DELETE\s+FROM\s+(\w+)/i);
+    if (!tableNameMatch) {
+      setQueryResult({ success: false, error: 'Invalid DELETE syntax' });
+      return;
+    }
+
+    const tableName = tableNameMatch[1];
+    const table = tables.find(t => t.name.toLowerCase() === tableName.toLowerCase());
+    
+    if (!table) {
+      setQueryResult({ success: false, error: 'Table not found' });
+      return;
+    }
+
+    // In a real implementation, you would parse the WHERE clause
+    // For this demo, we'll just acknowledge the delete
+    setQueryResult({ 
+      success: true, 
+      data: [],
+      fields: table.columns.map(col => col.name)
+    });
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4">
-      <div className="bg-white rounded-lg shadow-md">
-        <div className="border-b">
-          <nav className="flex space-x-8 px-6" aria-label="Tabs">
-            {[
-              { id: 'tables', icon: Table, label: 'Tables' },
-              { id: 'views', icon: Eye, label: 'Views' },
-              { id: 'triggers', icon: Zap, label: 'Triggers' }
-            ].map(({ id, icon: Icon, label }) => (
-              <button
-                key={id}
-                onClick={() => {
-                  setActiveTab(id as any);
-                  setSelectedObject(null);
-                }}
-                className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm
-                  ${activeTab === id
-                    ? 'border-indigo-500 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span>{label}</span>
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Object List */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">Database Objects</h2>
+    <div className="h-screen flex flex-col">
+      <div className="flex-1 px-8 py-6 min-h-0">
+        <div className="flex gap-8 h-full">
+          {/* Left Sidebar - Tables List */}
+          <div className="w-1/4 flex flex-col min-h-0">
+            <div className="bg-white rounded-lg shadow-md p-6 flex-1 flex flex-col min-h-0">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Tables</h2>
                 <button
                   onClick={() => setShowCreateModal(true)}
                   className="p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
@@ -104,155 +221,210 @@ export default function Playground() {
                   <Plus className="w-5 h-5" />
                 </button>
               </div>
-
-              <div className="space-y-2">
-                {dbObjects
-                  .filter(obj => obj.type === activeTab.slice(0, -1))
-                  .map(obj => (
+              
+              <div className="overflow-y-auto flex-1 min-h-0 pr-4">
+                <div className="space-y-3">
+                  {tables.map(table => (
                     <button
-                      key={obj.id}
-                      onClick={() => setSelectedObject(obj)}
-                      className={`w-full text-left p-3 rounded-lg border transition
-                        ${selectedObject?.id === obj.id
+                      key={table.id}
+                      onClick={() => setSelectedTable(table)}
+                      className={`w-full text-left p-4 rounded-lg border transition
+                        ${selectedTable?.id === table.id
                           ? 'border-indigo-500 bg-indigo-50'
                           : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'
                         }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium">{obj.name}</span>
+                        <span className="font-medium">{table.name}</span>
                         <Database className="w-4 h-4 text-gray-400" />
                       </div>
                     </button>
                   ))}
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Object Details and Query Editor */}
-            <div className="lg:col-span-2">
-              {selectedObject ? (
-                <div className="space-y-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="text-lg font-semibold mb-2">Definition</h3>
+          {/* Right Content Area */}
+          <div className="flex-1 flex flex-col min-h-0">
+            {selectedTable ? (
+              <div className="bg-white rounded-lg shadow-md p-6 flex-1 flex flex-col min-h-0">
+                <div className="overflow-y-auto flex-1 min-h-0 pr-4">
+                  {/* Table Definition */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold mb-3">Table Definition</h3>
                     <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-x-auto">
-                      {selectedObject.definition}
+                      {selectedTable.definition}
                     </pre>
                   </div>
 
-                  {selectedObject.type === 'table' && selectedObject.columns && (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-lg font-semibold mb-2">Structure</h3>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Column
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Type
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Constraints
-                              </th>
+                  {/* Table Structure */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold mb-3">Table Structure</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Column</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Constraints</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {selectedTable.columns.map((col, idx) => (
+                            <tr key={idx}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{col.name}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{col.type}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {[
+                                  col.isPrimary && 'PRIMARY KEY',
+                                  !col.nullable && 'NOT NULL'
+                                ].filter(Boolean).join(', ')}
+                              </td>
                             </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {selectedObject.columns.map((col, idx) => (
-                              <tr key={idx}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                  {col.name}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {col.type}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {[
-                                    col.isPrimary && 'PRIMARY KEY',
-                                    !col.nullable && 'NOT NULL'
-                                  ].filter(Boolean).join(', ')}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                  )}
+                  </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold">Query Editor</h3>
-                      <button
-                        onClick={() => setQueries([])}
-                        className="flex items-center space-x-1 text-gray-600 hover:text-gray-800"
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                        <span>Clear History</span>
-                      </button>
+                  {/* Current Table Data */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold mb-3">Current Table Data</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            {selectedTable.columns.map(col => (
+                              <th key={col.name} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                {col.name}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {selectedTable.data.map((row, idx) => (
+                            <tr key={idx}>
+                              {selectedTable.columns.map(col => (
+                                <td key={col.name} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {row[col.name]}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Query Editor */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold mb-3">SQL Query</h3>
+                    <div className="mb-4 text-sm text-gray-600">
+                      Available fields: {selectedTable.columns.map(col => col.name).join(', ')}
                     </div>
                     <SQLEditor
                       onExecute={executeQuery}
-                      placeholder={`Enter your SQL query for ${selectedObject.name}...`}
+                      placeholder={`Enter your SQL query for ${selectedTable.name}...`}
                     />
                   </div>
 
-                  <div className="space-y-4">
-                    {queries.map((query) => (
-                      <div key={query.id} className="bg-gray-50 rounded-lg p-4">
-                        <pre className="text-sm text-gray-800 mb-4 bg-gray-100 p-2 rounded">
-                          {query.sql}
-                        </pre>
-                        {query.error ? (
-                          <div className="text-red-600">{query.error}</div>
-                        ) : (
-                          <div className="bg-white p-4 rounded border overflow-x-auto">
-                            <pre className="text-sm text-gray-600">
-                              {JSON.stringify(query.result, null, 2)}
-                            </pre>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  {/* Query Results */}
+                  {queryResult && (
+                    <div className="mb-8">
+                      <h3 className="text-lg font-semibold mb-3">Query Results</h3>
+                      {queryResult.error ? (
+                        <div className="p-4 bg-red-50 text-red-700 rounded-lg">
+                          {queryResult.error}
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                {queryResult.fields?.map(field => (
+                                  <th key={field} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    {field}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {queryResult.data?.map((row, idx) => (
+                                <tr key={idx}>
+                                  {queryResult.fields?.map(field => (
+                                    <td key={field} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      {row[field]?.toString()}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  <div className="text-center">
-                    <Database className="w-12 h-12 mx-auto mb-4" />
-                    <p className="text-lg">Select a database object to view details and run queries</p>
-                  </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-center h-full">
+                <div className="text-center text-gray-500">
+                  <Database className="w-12 h-12 mx-auto mb-4" />
+                  <p className="text-lg">Select a table to view details and run queries</p>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Create Object Modal */}
+      {/* Create Table Modal */}
+      {/* Create Table Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
-            <h2 className="text-xl font-semibold mb-4">
-              Create New {activeTab.slice(0, -1).charAt(0).toUpperCase() + activeTab.slice(0, -1).slice(1)}
-            </h2>
-            <textarea
-              value={newObjectDefinition}
-              onChange={(e) => setNewObjectDefinition(e.target.value)}
-              className="w-full h-40 p-4 bg-gray-800 text-white font-mono rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none mb-4"
-              placeholder={`Enter ${activeTab.slice(0, -1)} definition...`}
-            />
-            <div className="flex justify-end space-x-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold">Create New Table</h2>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  SQL Definition
+                </label>
+                <div className="text-sm text-gray-500 mb-4">
+                  Example: CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT)
+                </div>
+                <textarea
+                  value={newTableDefinition}
+                  onChange={(e) => setNewTableDefinition(e.target.value)}
+                  className="w-full h-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Enter CREATE TABLE statement..."
+                />
+              </div>
+            </div>
+
+            <div className="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-end gap-3">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-800 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
-                onClick={handleCreateObject}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                onClick={handleCreateTable}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
               >
-                Create
+                Create Table
               </button>
             </div>
           </div>
@@ -261,4 +433,383 @@ export default function Playground() {
     </div>
   );
 }
+// ..................................................................................................................................................................................
 
+
+// import { useState } from 'react';
+// import { Database, Plus } from 'lucide-react';
+// import SQLEditor from '../components/SQLEditor';
+
+// interface Column {
+//   name: string;
+//   type: string;
+//   nullable: boolean;
+//   isPrimary: boolean;
+// }
+
+// interface Table {
+//   id: string;
+//   name: string;
+//   definition: string;
+//   columns: Column[];
+//   data: any[];
+// }
+
+// interface QueryResult {
+//   success: boolean;
+//   data?: any[];
+//   error?: string;
+//   fields?: string[];
+// }
+
+// export default function Playground() {
+//   const [tables, setTables] = useState<Table[]>([]);
+//   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+//   const [showCreateModal, setShowCreateModal] = useState(false);
+//   const [newTableDefinition, setNewTableDefinition] = useState('');
+//   const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
+//   const [queryHistory, setQueryHistory] = useState<string[]>([]);
+
+//   const parseCreateTableSQL = (sql: string): Table | null => {
+//     try {
+//       const tableNameMatch = sql.match(/CREATE\s+TABLE\s+(\w+)\s*\(/i);
+//       if (!tableNameMatch) throw new Error("Invalid CREATE TABLE syntax");
+
+//       const tableName = tableNameMatch[1];
+//       const columnsSection = sql.slice(sql.indexOf('(') + 1, sql.lastIndexOf(')'));
+
+//       const columnDefinitions = columnsSection.split(',').map(col => col.trim());
+//       const columns: Column[] = columnDefinitions.map(colDef => {
+//         const parts = colDef.split(/\s+/);
+//         return {
+//           name: parts[0],
+//           type: parts[1],
+//           nullable: !colDef.toLowerCase().includes('not null'),
+//           isPrimary: colDef.toLowerCase().includes('primary key')
+//         };
+//       });
+
+//       return {
+//         id: Date.now().toString(),
+//         name: tableName,
+//         definition: sql,
+//         columns,
+//         data: []
+//       };
+//     } catch (error) {
+//       return null;
+//     }
+//   };
+
+//   const handleCreateTable = () => {
+//     const newTable = parseCreateTableSQL(newTableDefinition);
+//     if (newTable) {
+//       setTables([...tables, newTable]);
+//       setShowCreateModal(false);
+//       setNewTableDefinition('');
+//     } else {
+//       alert('Invalid table definition. Please check your SQL syntax.');
+//     }
+//   };
+
+//   const executeQuery = (sql: string) => {
+//     try {
+//       const lowerSQL = sql.toLowerCase();
+//       setQueryHistory([...queryHistory, sql]);
+
+//       if (lowerSQL.startsWith('select')) {
+//         handleSelect(sql);
+//       } else if (lowerSQL.startsWith('insert')) {
+//         handleInsert(sql);
+//       } else if (lowerSQL.startsWith('update')) {
+//         handleUpdate(sql);
+//       } else if (lowerSQL.startsWith('delete')) {
+//         handleDelete(sql);
+//       } else {
+//         setQueryResult({
+//           success: false,
+//           error: 'Unsupported query type. Please use SELECT, INSERT, UPDATE, or DELETE.'
+//         });
+//       }
+//     } catch (error) {
+//       setQueryResult({
+//         success: false,
+//         error: 'Error executing query: ' + (error as Error).message
+//       });
+//     }
+//   };
+
+//   const handleSelect = (sql: string) => {
+//     const tableName = sql.match(/from\s+(\w+)/i)?.[1];
+//     const table = tables.find(t => t.name.toLowerCase() === tableName?.toLowerCase());
+
+//     if (!table) {
+//       setQueryResult({ success: false, error: 'Table not found' });
+//       return;
+//     }
+
+//     setQueryResult({
+//       success: true,
+//       data: table.data,
+//       fields: table.columns.map(col => col.name)
+//     });
+//   };
+
+//   const handleInsert = (sql: string) => {
+//     const matches = sql.match(/INSERT\s+INTO\s+(\w+)\s*\((.*?)\)\s*VALUES\s*\((.*?)\)/i);
+//     if (!matches) {
+//       setQueryResult({ success: false, error: 'Invalid INSERT syntax' });
+//       return;
+//     }
+
+//     const [_, tableName, columns, values] = matches;
+//     const table = tables.find(t => t.name.toLowerCase() === tableName.toLowerCase());
+
+//     if (!table) {
+//       setQueryResult({ success: false, error: 'Table not found' });
+//       return;
+//     }
+
+//     const columnNames = columns.split(',').map(c => c.trim());
+//     const valueList = values.split(',').map(v => v.trim().replace(/'/g, ''));
+
+//     const newRow: any = {};
+//     columnNames.forEach((col, idx) => {
+//       newRow[col] = valueList[idx];
+//     });
+
+//     const updatedTable = {
+//       ...table,
+//       data: [...table.data, newRow]
+//     };
+
+//     setTables(tables.map(t => t.id === table.id ? updatedTable : t));
+//     setQueryResult({
+//       success: true,
+//       data: [newRow],
+//       fields: columnNames
+//     });
+//   };
+
+//   const handleUpdate = (sql: string) => {
+//     const tableNameMatch = sql.match(/UPDATE\s+(\w+)\s+SET/i);
+//     if (!tableNameMatch) {
+//       setQueryResult({ success: false, error: 'Invalid UPDATE syntax' });
+//       return;
+//     }
+
+//     const tableName = tableNameMatch[1];
+//     const table = tables.find(t => t.name.toLowerCase() === tableName.toLowerCase());
+
+//     if (!table) {
+//       setQueryResult({ success: false, error: 'Table not found' });
+//       return;
+//     }
+
+//     // Simplified update logic
+//     setQueryResult({
+//       success: true,
+//       data: [],
+//       fields: table.columns.map(col => col.name)
+//     });
+//   };
+
+//   const handleDelete = (sql: string) => {
+//     const tableNameMatch = sql.match(/DELETE\s+FROM\s+(\w+)/i);
+//     if (!tableNameMatch) {
+//       setQueryResult({ success: false, error: 'Invalid DELETE syntax' });
+//       return;
+//     }
+
+//     const tableName = tableNameMatch[1];
+//     const table = tables.find(t => t.name.toLowerCase() === tableName.toLowerCase());
+
+//     if (!table) {
+//       setQueryResult({ success: false, error: 'Table not found' });
+//       return;
+//     }
+
+//     // Simplified delete logic
+//     setQueryResult({
+//       success: true,
+//       data: [],
+//       fields: table.columns.map(col => col.name)
+//     });
+//   };
+
+//   return (
+//     <div className="h-screen flex flex-col">
+//       <div className="flex-1 px-8 py-6 min-h-0">
+//         <div className="flex gap-8 h-full">
+//           {/* Left Sidebar - Tables List */}
+//           <div className="w-1/4 flex flex-col min-h-0">
+//             <div className="bg-white rounded-lg shadow-md p-6 flex-1 flex flex-col min-h-0">
+//               <div className="flex justify-between items-center mb-6">
+//                 <h2 className="text-xl font-semibold">Tables</h2>
+//                 <button
+//                   onClick={() => setShowCreateModal(true)}
+//                   className="p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+//                 >
+//                   <Plus className="w-5 h-5" />
+//                 </button>
+//               </div>
+
+//               <div className="overflow-y-auto flex-1 min-h-0 pr-4">
+//                 <div className="space-y-3">
+//                   {tables.map(table => (
+//                     <button
+//                       key={table.id}
+//                       onClick={() => setSelectedTable(table)}
+//                       className={`w-full text-left p-4 rounded-lg border transition
+//                         ${selectedTable?.id === table.id
+//                           ? 'border-indigo-500 bg-indigo-50'
+//                           : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'
+//                         }`}
+//                     >
+//                       <div className="flex items-center justify-between">
+//                         <span className="font-medium">{table.name}</span>
+//                         <Database className="w-4 h-4 text-gray-400" />
+//                       </div>
+//                     </button>
+//                   ))}
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+
+//           {/* Right Content Area */}
+//           <div className="flex-1 flex flex-col min-h-0">
+//             {selectedTable ? (
+//               <div className="bg-white rounded-lg shadow-md p-6 flex-1 flex flex-col min-h-0">
+//                 <div className="overflow-y-auto flex-1 min-h-0 pr-4">
+//                   {/* Table Definition */}
+//                   <div className="mb-8">
+//                     <h3 className="text-lg font-semibold mb-3">Table Definition</h3>
+//                     <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-x-auto">
+//                       {selectedTable.definition}
+//                     </pre>
+//                   </div>
+
+//                   {/* Table Structure */}
+//                   <div className="mb-8">
+//                     <h3 className="text-lg font-semibold mb-3">Table Structure</h3>
+//                     <div className="overflow-x-auto">
+//                       <table className="min-w-full divide-y divide-gray-200">
+//                         <thead className="bg-gray-50">
+//                           <tr>
+//                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Column</th>
+//                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+//                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Constraints</th>
+//                           </tr>
+//                         </thead>
+//                         <tbody className="bg-white divide-y divide-gray-200">
+//                           {selectedTable.columns.map((col, idx) => (
+//                             <tr key={idx}>
+//                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{col.name}</td>
+//                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{col.type}</td>
+//                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+//                                 {[
+//                                   col.isPrimary && 'PRIMARY KEY',
+//                                   !col.nullable && 'NOT NULL'
+//                                 ].filter(Boolean).join(', ')}
+//                               </td>
+//                             </tr>
+//                           ))}
+//                         </tbody>
+//                       </table>
+//                     </div>
+//                   </div>
+
+//                   {/* Query Editor */}
+//                   <div className="mb-8">
+//                     <h3 className="text-lg font-semibold mb-3">SQL Query</h3>
+//                     <div className="mb-4 text-sm text-gray-600">
+//                       Available fields: {selectedTable.columns.map(col => col.name).join(', ')}
+//                     </div>
+//                     <SQLEditor
+//                       onExecute={executeQuery}
+//                       placeholder={`Enter your SQL query for ${selectedTable.name}...`}
+//                     />
+//                   </div>
+
+//                   {/* Query Results */}
+//                   {queryResult && (
+//                     <div className="mb-8">
+//                       <h3 className="text-lg font-semibold mb-3">Query Results</h3>
+//                       {queryResult.error ? (
+//                         <div className="p-4 bg-red-50 text-red-700 rounded-lg">
+//                           {queryResult.error}
+//                         </div>
+//                       ) : (
+//                         <div className="overflow-x-auto">
+//                           <table className="min-w-full divide-y divide-gray-200">
+//                             <thead className="bg-gray-50">
+//                               <tr>
+//                                 {queryResult.fields?.map(field => (
+//                                   <th key={field} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+//                                     {field}
+//                                   </th>
+//                                 ))}
+//                               </tr>
+//                             </thead>
+//                             <tbody className="bg-white divide-y divide-gray-200">
+//                               {queryResult.data?.map((row, idx) => (
+//                                 <tr key={idx}>
+//                                   {queryResult.fields?.map(field => (
+//                                     <td key={field} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+//                                       {row[field]?.toString()}
+//                                     </td>
+//                                   ))}
+//                                 </tr>
+//                               ))}
+//                             </tbody>
+//                           </table>
+//                         </div>
+//                       )}
+//                     </div>
+//                   )}
+//                 </div>
+//               </div>
+//             ) : (
+//               <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-center h-full">
+//                 <div className="text-center text-gray-500">
+//                   <Database className="w-12 h-12 mx-auto mb-4" />
+//                   <p className="text-lg">Select a table to view details and run queries</p>
+//                 </div>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Create Table Modal */}
+//       {showCreateModal && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+//           <div className="bg-white rounded-lg shadow-md p-6 w-1/2">
+//             <h2 className="text-xl font-semibold mb-6">Create Table</h2>
+//             <textarea
+//               value={newTableDefinition}
+//               onChange={(e) => setNewTableDefinition(e.target.value)}
+//               className="w-full p-4 border border-gray-300 rounded-lg mb-6"
+//               rows={6}
+//               placeholder="Enter CREATE TABLE SQL statement..."
+//             />
+//             <div className="flex justify-end">
+//               <button
+//                 onClick={() => setShowCreateModal(false)}
+//                 className="mr-4 px-4 py-2 text-gray-600 hover:text-gray-800"
+//               >
+//                 Cancel
+//               </button>
+//               <button
+//                 onClick={handleCreateTable}
+//                 className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+//               >
+//                 Create Table
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
